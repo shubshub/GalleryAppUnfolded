@@ -35,30 +35,32 @@ class MediaPagerAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: MediaItem) {
-            if (item.isVideo) {
-                binding.imageView.visibility = View.GONE
-                binding.videoView.visibility = View.VISIBLE
+            // Always show a poster frame via Glide (works for both images and videos)
+            binding.imageView.visibility = View.VISIBLE
+            Glide.with(binding.imageView)
+                .load(item.uri)
+                .into(binding.imageView)
 
+            if (item.isVideo) {
+                binding.videoView.visibility = View.VISIBLE
                 val mediaController = MediaController(binding.root.context)
                 mediaController.setAnchorView(binding.videoView)
                 binding.videoView.setMediaController(mediaController)
+                binding.videoView.setOnPreparedListener { mp ->
+                    binding.imageView.visibility = View.GONE
+                    mp.start()
+                }
                 binding.videoView.setVideoURI(item.uri)
-                binding.videoView.setOnPreparedListener { it.start() }
             } else {
-                binding.imageView.visibility = View.VISIBLE
                 binding.videoView.visibility = View.GONE
-
-                Glide.with(binding.imageView)
-                    .load(item.uri)
-                    .into(binding.imageView)
             }
         }
 
         fun recycle() {
-            if (binding.videoView.isPlaying) {
-                binding.videoView.stopPlayback()
-            }
+            binding.videoView.setOnPreparedListener(null)
+            binding.videoView.stopPlayback()
             binding.videoView.visibility = View.GONE
+            binding.imageView.visibility = View.VISIBLE
             Glide.with(binding.imageView).clear(binding.imageView)
         }
     }

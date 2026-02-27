@@ -1,6 +1,7 @@
 package com.unfoldedgallery.app
 
 import android.os.Bundle
+import android.view.View
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
@@ -41,8 +42,9 @@ class MediaViewerActivity : AppCompatActivity() {
             val holder = recyclerView.getChildViewHolder(child)
             if (holder.bindingAdapterPosition != currentPosition) {
                 val videoView = child.findViewById<VideoView>(R.id.videoView)
-                if (videoView != null && videoView.isPlaying) {
+                if (videoView != null && videoView.visibility == View.VISIBLE) {
                     videoView.stopPlayback()
+                    videoView.visibility = View.GONE
                 }
             }
         }

@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.unfoldedgallery.app.databinding.ItemMediaBinding
 
@@ -33,13 +34,20 @@ class MediaAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: MediaItem) {
-            Glide.with(binding.thumbnail)
+            val request = Glide.with(binding.thumbnail)
                 .load(item.uri)
                 .override(thumbnailSize, thumbnailSize)
-                .thumbnail(0.25f)
+                .format(DecodeFormat.PREFER_RGB_565)
                 .transition(DrawableTransitionOptions.withCrossFade(200))
                 .centerCrop()
-                .into(binding.thumbnail)
+
+            if (item.isVideo) {
+                request.disallowHardwareConfig()
+            } else {
+                request.thumbnail(0.25f)
+            }
+
+            request.into(binding.thumbnail)
 
             binding.videoIcon.visibility = if (item.isVideo) View.VISIBLE else View.GONE
             binding.durationText.visibility = if (item.isVideo) View.VISIBLE else View.GONE
