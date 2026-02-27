@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -32,12 +33,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN
+        )
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
 
-        val spanCount = calculateSpanCount()
+        val spanCount = 7
         val layoutManager = GridLayoutManager(this, spanCount)
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.setHasFixedSize(true)
@@ -62,12 +68,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             requestPermissions()
         }
-    }
-
-    private fun calculateSpanCount(): Int {
-        val displayMetrics = resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels / displayMetrics.density
-        return (screenWidth / 100).toInt().coerceIn(3, 6)
     }
 
     private fun hasPermissions(): Boolean {
