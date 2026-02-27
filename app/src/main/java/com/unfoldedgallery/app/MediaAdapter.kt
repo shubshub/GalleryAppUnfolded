@@ -8,7 +8,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.signature.MediaStoreSignature
 import com.unfoldedgallery.app.databinding.ItemMediaBinding
 
 class MediaAdapter(
@@ -36,6 +38,8 @@ class MediaAdapter(
         fun bind(item: MediaItem) {
             val request = Glide.with(binding.thumbnail)
                 .load(item.uri)
+                .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                .signature(MediaStoreSignature(item.mimeType, item.dateAdded, 0))
                 .override(thumbnailSize, thumbnailSize)
                 .format(DecodeFormat.PREFER_RGB_565)
                 .transition(DrawableTransitionOptions.withCrossFade(200))

@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         val layoutManager = GridLayoutManager(this, spanCount)
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.setHasFixedSize(true)
+        binding.recyclerView.setItemViewCacheSize(21)
 
         adapter = MediaAdapter { _, position ->
             MediaListHolder.items = adapter.currentList
