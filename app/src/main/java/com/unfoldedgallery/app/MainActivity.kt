@@ -48,11 +48,10 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = layoutManager
         binding.recyclerView.setHasFixedSize(true)
 
-        adapter = MediaAdapter { item, _ ->
+        adapter = MediaAdapter { _, position ->
+            MediaListHolder.items = adapter.currentList
             val intent = Intent(this, MediaViewerActivity::class.java).apply {
-                putExtra("uri", item.uri.toString())
-                putExtra("isVideo", item.isVideo)
-                putExtra("title", item.displayName)
+                putExtra("position", position)
             }
             startActivity(intent)
         }

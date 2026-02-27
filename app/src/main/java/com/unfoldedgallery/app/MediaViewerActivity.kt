@@ -1,10 +1,9 @@
 package com.unfoldedgallery.app
 
-import android.net.Uri
 import android.os.Bundle
-import android.widget.MediaController
+import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
-import com.bumptech.glide.Glide
+import androidx.viewpager2.widget.ViewPager2
 import com.unfoldedgallery.app.databinding.ActivityMediaViewerBinding
 
 class MediaViewerActivity : AppCompatActivity() {
@@ -16,35 +15,48 @@ class MediaViewerActivity : AppCompatActivity() {
         binding = ActivityMediaViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val uriString = intent.getStringExtra("uri") ?: run { finish(); return }
-        val uri = Uri.parse(uriString)
-        val isVideo = intent.getBooleanExtra("isVideo", false)
+        val items = MediaListHolder.items
+        if (items.isEmpty()) { finish(); return }
+
+        val startPosition = intent.getIntExtra("position", 0)
+
+        val pagerAdapter = MediaPagerAdapter(items)
+        binding.viewPager.adapter = pagerAdapter
+        binding.viewPager.offscreenPageLimit = 1
+        binding.viewPager.setCurrentItem(startPosition, false)
+
+        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                stopAllVideosExcept(position)
+            }
+        })
 
         binding.backButton.setOnClickListener { finish() }
+    }
 
-        if (isVideo) {
-            binding.imageView.visibility = android.view.View.GONE
-            binding.videoView.visibility = android.view.View.VISIBLE
-
-            val mediaController = MediaController(this)
-            mediaController.setAnchorView(binding.videoView)
-            binding.videoView.setMediaController(mediaController)
-            binding.videoView.setVideoURI(uri)
-            binding.videoView.setOnPreparedListener { it.start() }
-        } else {
-            binding.imageView.visibility = android.view.View.VISIBLE
-            binding.videoView.visibility = android.view.View.GONE
-
-            Glide.with(this)
-                .load(uri)
-                .into(binding.imageView)
+    private fun stopAllVideosExcept(currentPosition: Int) {
+        val recyclerView = binding.viewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView ?: return
+        for (i in 0 until recyclerView.childCount) {
+            val child = recyclerView.getChildAt(i)
+            val holder = recyclerView.getChildViewHolder(child)
+            if (holder.bindingAdapterPosition != currentPosition) {
+                val videoView = child.findViewById<VideoView>(R.id.videoView)
+                if (videoView != null && videoView.isPlaying) {
+                    videoView.stopPlayback()
+                }
+            }
         }
     }
 
     override fun onPause() {
         super.onPause()
-        if (binding.videoView.isPlaying) {
-            binding.videoView.pause()
+        val recyclerView = binding.viewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView ?: return
+        for (i in 0 until recyclerView.childCount) {
+            val child = recyclerView.getChildAt(i)
+            val videoView = child.findViewById<VideoView>(R.id.videoView)
+            if (videoView != null && videoView.isPlaying) {
+                videoView.pause()
+            }
         }
     }
 }

@@ -11,10 +11,13 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.unfoldedgallery.app.databinding.ItemMediaBinding
 
 class MediaAdapter(
-    private val onClick: (MediaItem, View) -> Unit
+    private val onClick: (MediaItem, Int) -> Unit
 ) : ListAdapter<MediaItem, MediaAdapter.ViewHolder>(DIFF) {
 
+    private var thumbnailSize = 154
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        thumbnailSize = parent.context.resources.displayMetrics.widthPixels / 7
         val binding = ItemMediaBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
@@ -32,6 +35,8 @@ class MediaAdapter(
         fun bind(item: MediaItem) {
             Glide.with(binding.thumbnail)
                 .load(item.uri)
+                .override(thumbnailSize, thumbnailSize)
+                .thumbnail(0.25f)
                 .transition(DrawableTransitionOptions.withCrossFade(200))
                 .centerCrop()
                 .into(binding.thumbnail)
@@ -43,7 +48,7 @@ class MediaAdapter(
                 binding.durationText.text = formatDuration(item.duration)
             }
 
-            binding.root.setOnClickListener { onClick(item, binding.thumbnail) }
+            binding.root.setOnClickListener { onClick(item, bindingAdapterPosition) }
         }
 
         private fun formatDuration(millis: Long): String {
