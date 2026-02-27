@@ -1,15 +1,15 @@
 package com.unfoldedgallery.app
 
 import android.os.Bundle
-import android.view.View
-import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.unfoldedgallery.app.databinding.ActivityMediaViewerBinding
 
 class MediaViewerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMediaViewerBinding
+    private var currentPosition = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,6 +20,7 @@ class MediaViewerActivity : AppCompatActivity() {
         if (items.isEmpty()) { finish(); return }
 
         val startPosition = intent.getIntExtra("position", 0)
+        currentPosition = startPosition
 
         val pagerAdapter = MediaPagerAdapter(items)
         binding.viewPager.adapter = pagerAdapter
@@ -28,37 +29,36 @@ class MediaViewerActivity : AppCompatActivity() {
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                stopAllVideosExcept(position)
+                stopVideoAtPosition(currentPosition)
+                currentPosition = position
+                if (items[position].isVideo) {
+                    binding.viewPager.post { playVideoAtPosition(position) }
+                }
             }
         })
+
+        // Auto-play if initial page is a video (deferred until layout completes)
+        if (items[startPosition].isVideo) {
+            binding.viewPager.post { playVideoAtPosition(startPosition) }
+        }
 
         binding.backButton.setOnClickListener { finish() }
     }
 
-    private fun stopAllVideosExcept(currentPosition: Int) {
-        val recyclerView = binding.viewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView ?: return
-        for (i in 0 until recyclerView.childCount) {
-            val child = recyclerView.getChildAt(i)
-            val holder = recyclerView.getChildViewHolder(child)
-            if (holder.bindingAdapterPosition != currentPosition) {
-                val videoView = child.findViewById<VideoView>(R.id.videoView)
-                if (videoView != null && videoView.visibility == View.VISIBLE) {
-                    videoView.stopPlayback()
-                    videoView.visibility = View.GONE
-                }
-            }
-        }
+    private fun playVideoAtPosition(position: Int) {
+        val recyclerView = binding.viewPager.getChildAt(0) as? RecyclerView ?: return
+        val holder = recyclerView.findViewHolderForAdapterPosition(position) as? MediaPagerAdapter.PageViewHolder
+        holder?.playVideo()
+    }
+
+    private fun stopVideoAtPosition(position: Int) {
+        val recyclerView = binding.viewPager.getChildAt(0) as? RecyclerView ?: return
+        val holder = recyclerView.findViewHolderForAdapterPosition(position) as? MediaPagerAdapter.PageViewHolder
+        holder?.stopVideo()
     }
 
     override fun onPause() {
         super.onPause()
-        val recyclerView = binding.viewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView ?: return
-        for (i in 0 until recyclerView.childCount) {
-            val child = recyclerView.getChildAt(i)
-            val videoView = child.findViewById<VideoView>(R.id.videoView)
-            if (videoView != null && videoView.isPlaying) {
-                videoView.pause()
-            }
-        }
+        stopVideoAtPosition(currentPosition)
     }
 }

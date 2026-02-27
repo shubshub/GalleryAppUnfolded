@@ -18,4 +18,13 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
+    <ImageView
+        android:id="@+id/playButton"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_play_circle"
+        android:contentDescription="Play video"
+        android:visibility="gone" />
+
 </FrameLayout>
