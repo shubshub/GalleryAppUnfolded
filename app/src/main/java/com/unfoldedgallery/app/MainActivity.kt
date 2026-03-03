@@ -11,6 +11,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.unfoldedgallery.app.databinding.ActivityMainBinding
 import java.util.concurrent.Executors
 
@@ -60,6 +62,16 @@ class MainActivity : AppCompatActivity() {
 
         // Make grid items square
         binding.recyclerView.addItemDecoration(GridSpacingDecoration(spanCount, 2))
+
+        // Pause Glide during fast flings to reduce wasted decodes
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                when (newState) {
+                    RecyclerView.SCROLL_STATE_SETTLING -> Glide.with(this@MainActivity).pauseRequests()
+                    else -> Glide.with(this@MainActivity).resumeRequests()
+                }
+            }
+        })
 
         binding.swipeRefresh.setOnRefreshListener { loadMedia() }
 

@@ -6,10 +6,14 @@ import android.view.ViewGroup
 import android.widget.MediaController
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DecodeFormat
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.unfoldedgallery.app.databinding.ItemMediaViewerBinding
 
 class MediaPagerAdapter(
-    private val items: List<MediaItem>
+    private val items: List<MediaItem>,
+    private val screenWidth: Int,
+    private val screenHeight: Int
 ) : RecyclerView.Adapter<MediaPagerAdapter.PageViewHolder>() {
 
     override fun getItemCount(): Int = items.size
@@ -18,7 +22,7 @@ class MediaPagerAdapter(
         val binding = ItemMediaViewerBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
-        return PageViewHolder(binding)
+        return PageViewHolder(binding, screenWidth, screenHeight)
     }
 
     override fun onBindViewHolder(holder: PageViewHolder, position: Int) {
@@ -31,11 +35,14 @@ class MediaPagerAdapter(
     }
 
     class PageViewHolder(
-        private val binding: ItemMediaViewerBinding
+        private val binding: ItemMediaViewerBinding,
+        private val screenWidth: Int,
+        private val screenHeight: Int
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private var currentItem: MediaItem? = null
         private var videoActive = false
+        private var mediaController: MediaController? = null
 
         fun bind(item: MediaItem) {
             currentItem = item
@@ -46,9 +53,13 @@ class MediaPagerAdapter(
             binding.videoView.visibility = View.GONE
             binding.imageView.visibility = View.VISIBLE
 
-            // Load poster frame via Glide (works for both images and videos)
+            // Load poster frame via Glide with constrained size
             Glide.with(binding.imageView)
                 .load(item.uri)
+                .override(screenWidth, screenHeight)
+                .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                .format(DecodeFormat.PREFER_ARGB_8888)
+                .thumbnail(0.1f)
                 .into(binding.imageView)
 
             if (item.isVideo) {
@@ -68,9 +79,12 @@ class MediaPagerAdapter(
             binding.playButton.visibility = View.GONE
             binding.videoView.visibility = View.VISIBLE
 
-            val mediaController = MediaController(binding.root.context)
-            mediaController.setAnchorView(binding.videoView)
-            binding.videoView.setMediaController(mediaController)
+            // Reuse cached MediaController
+            val controller = mediaController ?: MediaController(binding.root.context).also {
+                mediaController = it
+            }
+            controller.setAnchorView(binding.videoView)
+            binding.videoView.setMediaController(controller)
             binding.videoView.setOnPreparedListener { mp ->
                 binding.imageView.visibility = View.GONE
                 mp.start()
@@ -87,10 +101,14 @@ class MediaPagerAdapter(
             binding.videoView.visibility = View.GONE
             binding.imageView.visibility = View.VISIBLE
 
-            // Reload poster frame
+            // Reload poster frame with constrained size
             currentItem?.let { item ->
                 Glide.with(binding.imageView)
                     .load(item.uri)
+                    .override(screenWidth, screenHeight)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .format(DecodeFormat.PREFER_ARGB_8888)
+                    .thumbnail(0.1f)
                     .into(binding.imageView)
             }
 
@@ -106,6 +124,7 @@ class MediaPagerAdapter(
             binding.playButton.setOnClickListener(null)
             Glide.with(binding.imageView).clear(binding.imageView)
             currentItem = null
+            mediaController = null
         }
     }
 }

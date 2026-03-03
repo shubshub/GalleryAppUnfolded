@@ -22,15 +22,5 @@ class GridSpacingDecoration(
         if (position >= spanCount) {
             outRect.top = spacing
         }
-
-        // Force square aspect ratio
-        view.post {
-            val width = view.width
-            if (width > 0) {
-                val lp = view.layoutParams
-                lp.height = width
-                view.layoutParams = lp
-            }
-        }
     }
 }

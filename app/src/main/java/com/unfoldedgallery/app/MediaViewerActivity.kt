@@ -1,6 +1,7 @@
 package com.unfoldedgallery.app
 
 import android.os.Bundle
+import android.util.DisplayMetrics
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
@@ -22,7 +23,9 @@ class MediaViewerActivity : AppCompatActivity() {
         val startPosition = intent.getIntExtra("position", 0)
         currentPosition = startPosition
 
-        val pagerAdapter = MediaPagerAdapter(items)
+        val metrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(metrics)
+        val pagerAdapter = MediaPagerAdapter(items, metrics.widthPixels, metrics.heightPixels)
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.offscreenPageLimit = 1
         binding.viewPager.setCurrentItem(startPosition, false)

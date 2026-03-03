@@ -31,6 +31,11 @@ class MediaAdapter(
         holder.bind(getItem(position))
     }
 
+    override fun onViewRecycled(holder: ViewHolder) {
+        super.onViewRecycled(holder)
+        Glide.with(holder.itemView).clear(holder.itemView.findViewById<View>(R.id.thumbnail))
+    }
+
     inner class ViewHolder(
         private val binding: ItemMediaBinding
     ) : RecyclerView.ViewHolder(binding.root) {
